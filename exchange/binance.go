@@ -18,14 +18,14 @@ type BinanceBookTicker struct {
 }
 
 type Quote struct {
-	Exchange string
-	Symbol   string
-	Bid      float64
-	Ask      float64
+	Exchange  string
+	Symbol    string
+	Bid       float64
+	Ask       float64
 	Timestamp time.Time
 }
 
-func main() {
+func Binance() {
 	url := "wss://stream.binance.com:9443/ws/btcusdt@bookTicker"
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {

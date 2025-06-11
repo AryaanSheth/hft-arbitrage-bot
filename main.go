@@ -5,5 +5,10 @@ import (
 )
 
 func main() {
-	fmt.Println("Hello, HFT Arbitrage Bot!")
+	fmt.Println("HFT Arbitrage Bot")
+
+	// Initialize exchanges
+	// Binance()
+	// Kraken()
+	// OKX()
 }
