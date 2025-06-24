@@ -54,6 +54,20 @@ func main() {
 		exchange.OKX(quoteChan)
 	}()
 
+	// Start Bybit
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		exchange.Bybit(quoteChan)
+	}()
+
+	// Start KuCoin
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		exchange.Kucoin(quoteChan)
+	}()
+
 	log.Println("✅ All exchanges started successfully")
 	log.Println("📊 Monitoring for arbitrage opportunities...")
 	log.Println("💡 Minimum spread threshold: 0.3%")
@@ -70,6 +84,13 @@ func main() {
 	log.Println("   - GET /summary - P&L summary")
 	log.Println("   - GET /trades - Recent trades")
 	log.Println("   - GET /health - Health check")
+	log.Println("")
+	log.Println("📈 Exchanges:")
+	log.Println("   🟡 Binance")
+	log.Println("   🟣 Kraken")
+	log.Println("   ⚫️ OKX")
+	log.Println("   🟠 Bybit")
+	log.Println("   🟢 KuCoin")
 
 	// Start a goroutine to handle user input for P&L checking
 	go handleUserInput(arbitrageStrategy)
