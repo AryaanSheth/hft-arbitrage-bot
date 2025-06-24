@@ -16,6 +16,19 @@ type Quote struct {
 	Timestamp time.Time
 }
 
+// Add fee and slippage config
+var exchangeFees = map[string]float64{
+	"binance": 0.0010, // 0.10%
+	"kraken":  0.0026, // 0.26%
+	"okx":     0.0010, // 0.10%
+}
+
+var exchangeSlippage = map[string]float64{
+	"binance": 0.0002, // 0.02%
+	"kraken":  0.0002, // 0.02%
+	"okx":     0.0002, // 0.02%
+}
+
 // ArbitrageOpportunity represents a potential arbitrage opportunity
 type ArbitrageOpportunity struct {
 	BuyExchange  string
@@ -26,6 +39,13 @@ type ArbitrageOpportunity struct {
 	Spread       float64
 	SpreadPercent float64
 	Timestamp    time.Time
+
+	BuyFee       float64
+	SellFee      float64
+	BuySlippage  float64
+	SellSlippage float64
+	EffBuyPrice  float64
+	EffSellPrice float64
 }
 
 // ArbitrageStrategy manages the arbitrage detection across multiple exchanges
@@ -33,14 +53,14 @@ type ArbitrageStrategy struct {
 	quotes     map[string]Quote
 	quotesLock sync.RWMutex
 	minSpread  float64 // minimum spread percentage to consider arbitrage
-	pnlManager *PnLManager // Add P&L manager
+	pnlManager *PnLManager
 }
 
 // NewArbitrageStrategy creates a new arbitrage strategy instance
 func NewArbitrageStrategy(minSpreadPercent float64, initialBalance, tradeSize float64) *ArbitrageStrategy {
 	return &ArbitrageStrategy{
 		quotes:    make(map[string]Quote),
-		minSpread: minSpreadPercent,
+		minSpread: 0.0, // Lowered to 0 for more aggressive trading
 		pnlManager: NewPnLManager(initialBalance, tradeSize),
 	}
 }
@@ -82,12 +102,15 @@ func (as *ArbitrageStrategy) FindArbitrageOpportunities() []ArbitrageOpportunity
 			quote1 := as.quotes[exchange1]
 			quote2 := as.quotes[exchange2]
 
-			// Check if we can buy on exchange1 and sell on exchange2
+			// Check buy on exchange1, sell on exchange2
 			if quote1.Ask < quote2.Bid {
 				spread := quote2.Bid - quote1.Ask
 				spreadPercent := (spread / quote1.Ask) * 100
-				
-				if spreadPercent >= as.minSpread {
+				effBuy := quote1.Ask * (1 + exchangeFees[exchange1] + exchangeSlippage[exchange1])
+				effSell := quote2.Bid * (1 - exchangeFees[exchange2] - exchangeSlippage[exchange2])
+				netProfit := effSell - effBuy
+				netProfitPercent := (netProfit / effBuy) * 100
+				if netProfit > 0 {
 					opportunities = append(opportunities, ArbitrageOpportunity{
 						BuyExchange:   exchange1,
 						SellExchange:  exchange2,
@@ -97,16 +120,27 @@ func (as *ArbitrageStrategy) FindArbitrageOpportunities() []ArbitrageOpportunity
 						Spread:        spread,
 						SpreadPercent: spreadPercent,
 						Timestamp:     time.Now(),
+						BuyFee:        exchangeFees[exchange1],
+						SellFee:       exchangeFees[exchange2],
+						BuySlippage:   exchangeSlippage[exchange1],
+						SellSlippage:  exchangeSlippage[exchange2],
+						EffBuyPrice:   effBuy,
+						EffSellPrice:  effSell,
 					})
+				} else if spreadPercent > 0 {
+					log.Printf("⚠️ Missed opportunity (pre-fee spread %.4f%%, net profit %.4f%%): BUY %s at %.2f, SELL %s at %.2f", spreadPercent, netProfitPercent, exchange1, quote1.Ask, exchange2, quote2.Bid)
 				}
 			}
 
-			// Check if we can buy on exchange2 and sell on exchange1
+			// Check buy on exchange2, sell on exchange1
 			if quote2.Ask < quote1.Bid {
 				spread := quote1.Bid - quote2.Ask
 				spreadPercent := (spread / quote2.Ask) * 100
-				
-				if spreadPercent >= as.minSpread {
+				effBuy := quote2.Ask * (1 + exchangeFees[exchange2] + exchangeSlippage[exchange2])
+				effSell := quote1.Bid * (1 - exchangeFees[exchange1] - exchangeSlippage[exchange1])
+				netProfit := effSell - effBuy
+				netProfitPercent := (netProfit / effBuy) * 100
+				if netProfit > 0 {
 					opportunities = append(opportunities, ArbitrageOpportunity{
 						BuyExchange:   exchange2,
 						SellExchange:  exchange1,
@@ -116,7 +150,15 @@ func (as *ArbitrageStrategy) FindArbitrageOpportunities() []ArbitrageOpportunity
 						Spread:        spread,
 						SpreadPercent: spreadPercent,
 						Timestamp:     time.Now(),
+						BuyFee:        exchangeFees[exchange2],
+						SellFee:       exchangeFees[exchange1],
+						BuySlippage:   exchangeSlippage[exchange2],
+						SellSlippage:  exchangeSlippage[exchange1],
+						EffBuyPrice:   effBuy,
+						EffSellPrice:  effSell,
 					})
+				} else if spreadPercent > 0 {
+					log.Printf("⚠️ Missed opportunity (pre-fee spread %.4f%%, net profit %.4f%%): BUY %s at %.2f, SELL %s at %.2f", spreadPercent, netProfitPercent, exchange2, quote2.Ask, exchange1, quote1.Bid)
 				}
 			}
 		}

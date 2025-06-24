@@ -20,8 +20,8 @@ func main() {
 	// Create a channel for quotes from all exchanges
 	quoteChan := make(chan strategy.Quote, 1000) // Buffered channel to handle high-frequency updates
 
-	// Create arbitrage strategy with 0.1% minimum spread, $1000 initial balance, $100 trade size
-	arbitrageStrategy := strategy.NewArbitrageStrategy(0.1, 1000.0, 100.0)
+	// Create arbitrage strategy with 0.3% minimum spread, $1000 initial balance, $100 trade size
+	arbitrageStrategy := strategy.NewArbitrageStrategy(0.2, 1000.0, 100.0)
 
 	// Start the arbitrage strategy in a goroutine
 	go arbitrageStrategy.RunArbitrageStrategy(quoteChan)
@@ -56,7 +56,7 @@ func main() {
 
 	log.Println("✅ All exchanges started successfully")
 	log.Println("📊 Monitoring for arbitrage opportunities...")
-	log.Println("💡 Minimum spread threshold: 0.1%")
+	log.Println("💡 Minimum spread threshold: 0.3%")
 	log.Println("💰 Initial balance: $1000.00")
 	log.Println("📈 Trade size: $100.00")
 	log.Println("🌐 P&L API available at http://localhost:8080")

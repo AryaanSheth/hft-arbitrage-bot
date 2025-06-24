@@ -32,7 +32,7 @@ func Kraken(quoteChan chan<- strategy.Quote) {
 
 	subscribe := KrakenSubscribeMsg{
 		Event: "subscribe",
-		Pair:  []string{"XBT/USD"},
+		Pair:  []string{"DOGE/USD"},
 		Subscription: Subscription{
 			Name:  "book",
 			Depth: 10, // more depth = more data but slower
@@ -44,7 +44,7 @@ func Kraken(quoteChan chan<- strategy.Quote) {
 		log.Fatal("Failed to subscribe:", err)
 	}
 
-	log.Println("Subscribed to Kraken BTC/USD order book")
+	log.Println("Subscribed to Kraken DOGE/USD order book")
 
 	var currentBid, currentAsk float64
 
@@ -81,7 +81,7 @@ func Kraken(quoteChan chan<- strategy.Quote) {
 			if currentBid > 0 && currentAsk > 0 {
 				quote := strategy.Quote{
 					Exchange:  "kraken",
-					Symbol:    "XBTUSD",
+					Symbol:    "DOGEUSD",
 					Bid:       currentBid,
 					Ask:       currentAsk,
 					Timestamp: time.Now(),
@@ -94,7 +94,7 @@ func Kraken(quoteChan chan<- strategy.Quote) {
 					// Channel is full, skip this quote
 				}
 
-				log.Printf("Kraken: Bid=%.2f, Ask=%.2f", currentBid, currentAsk)
+				log.Printf("🟣 Kraken: Bid=%.6f, Ask=%.6f", currentBid, currentAsk)
 			}
 		}
 	}

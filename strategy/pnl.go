@@ -76,7 +76,7 @@ func (pm *PnLManager) ExecuteArbitrage(opp ArbitrageOpportunity) error {
 	}
 
 	// Calculate quantity based on trade size
-	quantity := pm.tradeSize / opp.BuyPrice
+	quantity := pm.tradeSize / opp.EffBuyPrice
 
 	// Execute buy trade
 	buyTrade := Trade{
@@ -84,7 +84,7 @@ func (pm *PnLManager) ExecuteArbitrage(opp ArbitrageOpportunity) error {
 		Type:      "BUY",
 		Exchange:  opp.BuyExchange,
 		Symbol:    opp.Symbol,
-		Price:     opp.BuyPrice,
+		Price:     opp.EffBuyPrice,
 		Quantity:  quantity,
 		Timestamp: time.Now(),
 		Status:    "FILLED",
@@ -96,7 +96,7 @@ func (pm *PnLManager) ExecuteArbitrage(opp ArbitrageOpportunity) error {
 		Type:      "SELL",
 		Exchange:  opp.SellExchange,
 		Symbol:    opp.Symbol,
-		Price:     opp.SellPrice,
+		Price:     opp.EffSellPrice,
 		Quantity:  quantity,
 		Timestamp: time.Now(),
 		Status:    "FILLED",
@@ -127,9 +127,10 @@ func (pm *PnLManager) ExecuteArbitrage(opp ArbitrageOpportunity) error {
 	// Add trades to history
 	pm.trades = append(pm.trades, buyTrade, sellTrade)
 
-	// Log the execution
-	log.Printf("🔄 EXECUTED ARBITRAGE: Buy %.4f %s on %s at $%.2f, Sell on %s at $%.2f", 
-		quantity, opp.Symbol, opp.BuyExchange, opp.BuyPrice, opp.SellExchange, opp.SellPrice)
+	// Log the execution with fee/slippage info
+	log.Printf("🔄 EXECUTED ARBITRAGE: Buy %.4f %s on %s at $%.2f (fee %.4f, slippage %.4f), Sell on %s at $%.2f (fee %.4f, slippage %.4f)",
+		quantity, opp.Symbol, opp.BuyExchange, opp.BuyPrice, opp.BuyFee, opp.BuySlippage, opp.SellExchange, opp.SellPrice, opp.SellFee, opp.SellSlippage)
+	log.Printf("   Effective Buy: $%.4f, Effective Sell: $%.4f", opp.EffBuyPrice, opp.EffSellPrice)
 	log.Printf("💰 P&L: $%.2f (%.2f%%)", pnl, (pnl/pm.tradeSize)*100)
 
 	return nil

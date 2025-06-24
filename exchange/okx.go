@@ -46,7 +46,7 @@ func OKX(quoteChan chan<- strategy.Quote) {
 		Args: []OKXSubscribeArg{
 			{
 				Channel: "books",
-				InstId:  "BTC-USDT",
+				InstId:  "DOGE-USDT",
 			},
 		},
 	}
@@ -56,7 +56,7 @@ func OKX(quoteChan chan<- strategy.Quote) {
 		log.Fatal("Subscription failed:", err)
 	}
 
-	log.Println("Subscribed to OKX BTC-USDT order book")
+	log.Println("Subscribed to OKX DOGE-USDT order book")
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -90,7 +90,7 @@ func OKX(quoteChan chan<- strategy.Quote) {
 
 		quote := strategy.Quote{
 			Exchange:  "okx",
-			Symbol:    "BTCUSDT",
+			Symbol:    "DOGEUSDT",
 			Bid:       bid,
 			Ask:       ask,
 			Timestamp: time.Now(),
@@ -103,6 +103,6 @@ func OKX(quoteChan chan<- strategy.Quote) {
 			// Channel is full, skip this quote
 		}
 
-		log.Printf("OKX: Bid=%.2f, Ask=%.2f", bid, ask)
+		log.Printf("⚫️ OKX: Bid=%.6f, Ask=%.6f", bid, ask)
 	}
 }

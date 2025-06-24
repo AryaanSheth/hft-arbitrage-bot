@@ -20,14 +20,14 @@ type BinanceBookTicker struct {
 
 // Binance starts the Binance WebSocket connection and sends quotes to the provided channel
 func Binance(quoteChan chan<- strategy.Quote) {
-	url := "wss://stream.binance.com:9443/ws/btcusdt@bookTicker"
+	url := "wss://stream.binance.com:9443/ws/dogeusdt@bookTicker"
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
 		log.Fatal("Error connecting to WebSocket:", err)
 	}
 	defer conn.Close()
 
-	log.Println("Connected to Binance stream for btcusdt")
+	log.Println("Connected to Binance stream for dogeusdt")
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -65,6 +65,6 @@ func Binance(quoteChan chan<- strategy.Quote) {
 			// Channel is full, skip this quote
 		}
 
-		log.Printf("Binance: Bid=%.2f, Ask=%.2f", bid, ask)
+		log.Printf("🟡 Binance: Bid=%.6f, Ask=%.6f", bid, ask)
 	}
 }
