@@ -1,4 +1,4 @@
-module github.com/AryaanSheth/hft-arbitrage-bot
+module hft-arbitrage-bot
 
 go 1.24.4
 

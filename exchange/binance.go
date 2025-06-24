@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"hft-arbitrage-bot/strategy"
 )
 
 type BinanceBookTicker struct {
@@ -17,15 +18,8 @@ type BinanceBookTicker struct {
 	AskQty   string `json:"A"`
 }
 
-type Quote struct {
-	Exchange  string
-	Symbol    string
-	Bid       float64
-	Ask       float64
-	Timestamp time.Time
-}
-
-func Binance() {
+// Binance starts the Binance WebSocket connection and sends quotes to the provided channel
+func Binance(quoteChan chan<- strategy.Quote) {
 	url := "wss://stream.binance.com:9443/ws/btcusdt@bookTicker"
 	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
 	if err != nil {
@@ -42,8 +36,6 @@ func Binance() {
 			break
 		}
 
-		// log.Println("RAW:", string(message))
-
 		var ticker BinanceBookTicker
 		err = json.Unmarshal(message, &ticker)
 		if err != nil {
@@ -58,7 +50,7 @@ func Binance() {
 			continue
 		}
 
-		quote := Quote{
+		quote := strategy.Quote{
 			Exchange:  "binance",
 			Symbol:    ticker.Symbol,
 			Bid:       bid,
@@ -66,6 +58,13 @@ func Binance() {
 			Timestamp: time.Now(),
 		}
 
-		log.Printf("Received quote: %+v\n", quote)
+		// Send quote to strategy
+		select {
+		case quoteChan <- quote:
+		default:
+			// Channel is full, skip this quote
+		}
+
+		log.Printf("Binance: Bid=%.2f, Ask=%.2f", bid, ask)
 	}
 }
